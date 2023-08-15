@@ -37,6 +37,33 @@ export default class UserController {
         return res.status(200).json(users)
     }
 
+    static async find3(req: Request, res: Response) {
+        const cacheKey = "users:all:v3";
+        const cacheUsers = await redis.get(cacheKey);
+        const isUsersFromCacheStale = !(await redis.get(`${cacheKey}:validation`));
+        const isUsersFromCacheRefetching = (await redis.get(`${cacheKey}:is-refetching`));
+        const mustCreateCache = (cacheUsers) ? (isUsersFromCacheStale && !isUsersFromCacheRefetching) : true;
+
+
+        //Recomendado em fazer em segundo plano: Worker, Fila com ou sem Mensageria
+        if (mustCreateCache) {
+            await redis.set(`${cacheKey}:is-refetching`, "true");
+            setTimeout(async () => {
+                console.log("cache is stale - refetching...");
+                const users = await prisma.user.findMany();
+                await redis.set(cacheKey, JSON.stringify(users));
+                await redis.set(`${cacheKey}:validation`, "true", "EX", 60)
+                await redis.del(`${cacheKey}:is-refetching`);
+
+                if (!cacheUsers) return res.status(200).json(users);
+
+            }, 0);
+        }
+
+        if (cacheUsers) return res.status(200).json(JSON.parse(cacheUsers));
+    }
+
+
     static async clearCacheFind(req: Request, res: Response) {
         const cacheKey = "users:all";
         await redis.del(cacheKey);
