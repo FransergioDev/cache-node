@@ -9,6 +9,7 @@ usersRouter.get('/test', (req, res) => {
 });
 
 usersRouter.get('/ctrl', UserController.ctrl);
+usersRouter.get('/clear-cache', UserController.clearCacheFind);
 usersRouter.get('/test-error', UserController.findErrorTest);
 usersRouter.get('/', UserController.find);
 
