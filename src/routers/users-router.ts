@@ -12,6 +12,7 @@ usersRouter.get('/ctrl', UserController.ctrl);
 usersRouter.get('/clear-cache', UserController.clearCacheFind);
 usersRouter.get('/test-error', UserController.findErrorTest);
 usersRouter.get('/', UserController.find);
+usersRouter.get('/v2', UserController.find2);
 
 
 export default usersRouter;

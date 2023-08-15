@@ -26,6 +26,17 @@ export default class UserController {
         return res.status(200).json(users)
     }
 
+    static async find2(req: Request, res: Response) {
+        const cacheKey = "users:all:v2";
+        const cacheUsers = await redis.get(cacheKey);
+
+        if (cacheUsers) return res.status(200).json(JSON.parse(cacheUsers));
+
+        const users = await prisma.user.findMany();
+        await redis.set(cacheKey, JSON.stringify(users), "EX", 60); // Expiração do valor em cache em 60s
+        return res.status(200).json(users)
+    }
+
     static async clearCacheFind(req: Request, res: Response) {
         const cacheKey = "users:all";
         await redis.del(cacheKey);
