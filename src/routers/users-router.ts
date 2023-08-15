@@ -11,8 +11,11 @@ usersRouter.get('/test', (req, res) => {
 usersRouter.get('/ctrl', UserController.ctrl);
 usersRouter.get('/clear-cache', UserController.clearCacheFind);
 usersRouter.get('/test-error', UserController.findErrorTest);
-usersRouter.get('/', UserController.find);
-usersRouter.get('/v2', UserController.find2);
+usersRouter.get('/login', UserController.loginWithRateLimit);
+usersRouter.get('/login/generate-code', UserController.sendSmsToCheckPassportUpdate);
 usersRouter.get('/v3', UserController.find3);
+usersRouter.get('/v2', UserController.find2);
+usersRouter.get('/', UserController.find);
+
 
 export default usersRouter;

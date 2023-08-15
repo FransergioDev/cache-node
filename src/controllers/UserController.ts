@@ -70,6 +70,33 @@ export default class UserController {
         res.status(200).json({ message: "Success Clear Cache" })
     }
 
+    static async loginWithRateLimit(req: Request, res: Response) {
+        const resource = "login";
+        const ip = req.headers['x-forwarded-for'] || req.socket.remoteAddress;
+        //console.log(`IP:${ip}`);
+        const key = `rate-limit-${resource}-${ip}`;
+        const requestCount = Number((await redis.get(key)) || 0) + 1;
+        console.log(`${key}:COUNT:${requestCount}`);
+
+        if (requestCount > 5) {
+            throw new Error('rate-limit');
+        }
+
+        await redis.set(key, requestCount, "EX", 30);
+        return res.status(200).json({ login: true })
+    }
+
+    static async sendSmsToCheckPassportUpdate(req: Request, res: Response) {
+        const phone: String = "551699878854";
+        const message: String = "Olá segue o código de validação para alterar sua senha: 6969788";
+        const idempotencyKey = `idemp:${phone}-message`;
+        const sent = await redis.set(idempotencyKey, "sent", "EX", 5, "GET");
+
+        const message_info = (!sent) ? `send sms to ${phone} with message ${message}` : `already sent sms to ${phone} with message ${message}`;
+
+        return res.status((!sent) ? 200 : 500).json({ message: message_info })
+    }
+
     static async findErrorTest(req: Request, res: Response) {
         const data = await getUserFromDb();
         return res.status(200).json({ user: data });
